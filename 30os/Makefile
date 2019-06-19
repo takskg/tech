@@ -16,9 +16,14 @@ default :
 ipl.bin : ipl.nas Makefile
 	$(NASK) ipl.nas ipl.bin ipl.lst
 
-haribote.img : ipl.bin Makefile
+haribote.sys : haribote.nas Makefile
+	$(NASK) haribote.nas haribote.sys haribote.lst
+
+haribote.img : ipl.bin haribote.sys Makefile
 	$(EDIMG)   imgin:../tolset/z_tools/fdimg0at.tek \
-		wbinimg src:ipl.bin len:512 from:0 to:0   imgout:haribote.img
+		wbinimg src:ipl.bin len:512 from:0 to:0 \
+		copy from:haribote.sys to:@: \
+		imgout:haribote.img
 
 # ƒRƒ}ƒ“ƒh
 
@@ -40,6 +45,8 @@ install :
 clean :
 	-$(DEL) ipl.bin
 	-$(DEL) ipl.lst
+	-$(DEL) haribote.sys
+	-$(DEL) haribote.lst
 
 src_only :
 	$(MAKE) clean
