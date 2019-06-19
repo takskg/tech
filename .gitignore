@@ -3,3 +3,8 @@ tolset/*
 30os/*.bin
 30os/*.lst
 30os/*.sys
+30os/*.obj
+30os/*.gas
+30os/*.map
+30os/*.hrb
+30os/*.bim
