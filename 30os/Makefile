@@ -1,39 +1,46 @@
+TOOLPATH = ../tolset/z_tools/
+MAKE     = $(TOOLPATH)make.exe -r
+NASK     = $(TOOLPATH)nask.exe
+EDIMG    = $(TOOLPATH)edimg.exe
+IMGTOL   = $(TOOLPATH)imgtol.com
+COPY     = cp
+DEL      = rm -f
 
 # デフォルト動作
 
 default :
-	../tolset/z_tools/make.exe img
+	$(MAKE) img
 
 # ファイル生成規則
 
 ipl.bin : ipl.nas Makefile
-	../tolset/z_tools/nask.exe ipl.nas ipl.bin ipl.lst
+	$(NASK) ipl.nas ipl.bin ipl.lst
 
-helloos.img : ipl.bin Makefile
-	../tolset/z_tools/edimg.exe   imgin:../tolset/z_tools/fdimg0at.tek \
-		wbinimg src:ipl.bin len:512 from:0 to:0   imgout:helloos.img
+haribote.img : ipl.bin Makefile
+	$(EDIMG)   imgin:../tolset/z_tools/fdimg0at.tek \
+		wbinimg src:ipl.bin len:512 from:0 to:0   imgout:haribote.img
 
 # コマンド
 
 asm :
-	../tolset/z_tools/make.exe -r ipl.bin
+	$(MAKE) ipl.bin
 
 img :
-	../tolset/z_tools/make.exe -r helloos.img
+	$(MAKE) haribote.img
 
 run :
-	../tolset/z_tools/make.exe img
-	cp helloos.img ..\tolset\z_tools\qemu\fdimage0.bin
-	../tolset/z_tools/make.exe -C ../tolset/z_tools/qemu
+	$(MAKE) img
+	$(COPY) haribote.img ..\tolset\z_tools\qemu\fdimage0.bin
+	$(MAKE) -C ../tolset/z_tools/qemu
 
 install :
-	../tolset/z_tools/make.exe img
-	../tolset/z_tools/imgtol.com w a: helloos.img
+	$(MAKE) img
+	$(IMGTOL) w a: haribote.img
 
 clean :
-	rm -f ipl.bin
-	rm -f ipl.lst
+	-$(DEL) ipl.bin
+	-$(DEL) ipl.lst
 
 src_only :
-	../tolset/z_tools/make.exe clean
-	rm -f helloos.img
+	$(MAKE) clean
+	-$(DEL) haribote.img
