@@ -8,4 +8,4 @@ tolset/*
 30os/*.map
 30os/*.hrb
 30os/*.bim
-30os/bootpack.nas
+30os/*.nas
