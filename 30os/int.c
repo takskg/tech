@@ -2,6 +2,11 @@
 
 #include "bootpack.h"
 
+
+#define PORT_KEYDAT		0x0060
+struct KEYBUF keybuf;
+
+
 void init_pic(void)
 /* PICの初期化 */
 {
@@ -27,11 +32,12 @@ void init_pic(void)
 void inthandler21(int *esp)
 /* PS/2キーボードからの割り込み */
 {
-	struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;
-	boxfill8(binfo->vram, binfo->scrnx, COL8_000000, 0, 0, 32 * 8 - 1, 15);
-	putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, "INT 21 (IRQ-1) : PS/2 keyboard");
-	for (;;) {
-		io_hlt();
+	unsigned char data, s[4];
+	io_out8(PIC0_OCW2, 0x61);	/* IRQ-01受付完了をPICに通知 */
+	data = io_in8(PORT_KEYDAT);
+    if (keybuf.next < 32) {
+		keybuf.data[keybuf.next] = data;
+		keybuf.next++;
 	}
 }
 

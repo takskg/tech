@@ -1,12 +1,16 @@
 #include <stdio.h>
 #include "bootpack.h"
 
+extern struct KEYBUF keybuf;
+
 
 void HariMain(void)
 {
 	struct BOOTINFO* binfo = (struct BOOTINFO *)ADR_BOOTINFO;
 	char s[40], mcursor[256];
 	int mx, my;
+	unsigned char keycode;
+	int keyCount;
 
 	init_gdtidt();
 	init_pic();
@@ -25,6 +29,19 @@ void HariMain(void)
 	io_out8(PIC1_IMR, 0xef); /* ƒ}ƒEƒX‚ð‹–‰Â(11101111) */
 
 	for(;;){
-		io_hlt();
+		io_cli();
+		if (keybuf.next == 0) {
+			io_stihlt();
+		} else {
+			keycode = keybuf.data[0];
+			keybuf.next--;
+			for (keyCount = 0; keyCount < keybuf.next; keyCount++) {
+				keybuf.data[keyCount] = keybuf.data[keyCount + 1];
+			}
+			io_sti();
+			sprintf(s, "%02X", keycode);
+			boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 0, 16, 15, 31);
+			putfonts8_asc(binfo->vram, binfo->scrnx, 0, 16, COL8_FFFFFF, s);
+		}
 	}
 }
