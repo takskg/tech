@@ -1,4 +1,4 @@
-OBJS_BOOTPACK = bootpack.obj naskfunc.obj hankaku.obj graphic.obj dsctbl.obj
+OBJS_BOOTPACK = bootpack.obj naskfunc.obj hankaku.obj graphic.obj dsctbl.obj int.obj
 
 TOOLPATH = ../tolset/z_tools/
 INCPATH  = ../tolset/z_tools/haribote/
@@ -17,12 +17,12 @@ IMGTOL   = $(TOOLPATH)imgtol.com
 COPY     = cp
 DEL      = rm -f
 
-# ƒfƒtƒHƒ‹ƒg“®ì
+# ï¿½fï¿½tï¿½Hï¿½ï¿½ï¿½gï¿½ï¿½ï¿½ï¿½
 
 default :
 	$(MAKE) img
 
-# ƒtƒ@ƒCƒ‹¶¬‹K‘¥
+# ï¿½tï¿½@ï¿½Cï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Kï¿½ï¿½
 
 ipl10.bin : ipl10.nas Makefile
 	$(NASK) ipl10.nas ipl10.bin ipl10.lst
@@ -94,7 +94,7 @@ haribote.img : ipl10.bin haribote.sys Makefile
 	$(NASK) $*.nas $*.obj $*.lst
 
 
-# ƒRƒ}ƒ“ƒh
+# ï¿½Rï¿½}ï¿½ï¿½ï¿½h
 
 img :
 	$(MAKE) haribote.img
