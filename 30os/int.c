@@ -3,10 +3,6 @@
 #include "bootpack.h"
 
 
-#define PORT_KEYDAT		0x0060
-struct FIFO8 keyfifo;
-struct FIFO8 mousefifo;
-
 
 void init_pic(void)
 /* PICの初期化 */
@@ -28,25 +24,6 @@ void init_pic(void)
 	io_out8(PIC1_IMR,  0xff  ); /* 11111111 全ての割り込みを受け付けない */
 
 	return;
-}
-
-void inthandler21(int *esp)
-/* PS/2キーボードからの割り込み */
-{
-	unsigned char data, s[4];
-	io_out8(PIC0_OCW2, 0x61);	/* IRQ-01受付完了をPICに通知 */
-	data = io_in8(PORT_KEYDAT);
-    fifo8_put(&keyfifo, data);
-}
-
-void inthandler2c(int *esp)
-/* PS/2マウスからの割り込み */
-{
-	unsigned char data;
-	io_out8(PIC1_OCW2, 0x64);	/* IRQ-12受付完了をPIC1に通知 */
-	io_out8(PIC0_OCW2, 0x62);	/* IRQ-02受付完了をPIC0に通知 */
-	data = io_in8(PORT_KEYDAT);
-	fifo8_put(&mousefifo, data);
 }
 
 void inthandler27(int *esp)
