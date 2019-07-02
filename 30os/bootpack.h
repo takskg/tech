@@ -171,7 +171,7 @@ struct SHEET {
 	struct SHTCTL* ctl;
 };
 struct SHTCTL {
-	unsigned char *vram;
+	unsigned char *vram, *map;
 	int xsize;
 	int ysize;
 	int top;
