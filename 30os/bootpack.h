@@ -197,7 +197,10 @@ struct TIMER{
 };
 struct TIMERCTRL{
 	unsigned int count;
-	struct TIMER timer[MAX_TIMER];
+	unsigned int next;
+	unsigned int using;
+	struct TIMER *timers[MAX_TIMER];
+	struct TIMER timers0[MAX_TIMER];
 };
 extern struct TIMERCTRL timerctrl;
 void init_pit(void);

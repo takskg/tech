@@ -17,18 +17,20 @@ void init_pit(void)
     io_out8(PIT_CNT0, 0x2e);
 
     timerctrl.count = 0;
-    for(idx=0; idx<MAX_TIMER; ++idx){
-        timerctrl.timer[idx].flags = 0;//未使用
-    }
+    timerctrl.next = 0xffffffff; /* 最初は作動中のタイマがないので */
+    timerctrl.using = 0;
+	for (idx = 0; idx < MAX_TIMER; idx++) {
+		timerctrl.timers0[idx].flags = 0; /* 未使用 */
+	}
 }
 
 struct TIMER *timer_alloc(void)
 {
 	int i;
 	for (i = 0; i < MAX_TIMER; i++) {
-		if (timerctrl.timer[i].flags == 0) {
-			timerctrl.timer[i].flags = TIMER_FLAGS_ALLOC;
-			return &timerctrl.timer[i];
+		if (timerctrl.timers0[i].flags == 0) {
+			timerctrl.timers0[i].flags = TIMER_FLAGS_ALLOC;
+			return &timerctrl.timers0[i];
 		}
 	}
 	return 0; /* 見つからなかった */
@@ -49,25 +51,57 @@ void timer_init(struct TIMER *timer, struct FIFO8 *fifo, unsigned char data)
 
 void timer_settime(struct TIMER *timer, unsigned int timeout)
 {
-	timer->timeout = timeout;
+    int e, i, j;
+
+	timer->timeout = timeout + timerctrl.count;
 	timer->flags = TIMER_FLAGS_USING;
+	e = io_load_eflags();
+	io_cli();
+	/* どこに入れればいいかを探す */
+	for (i = 0; i < timerctrl.using; i++) {
+		if (timerctrl.timers[i]->timeout >= timer->timeout) {
+			break;
+		}
+	}
+	/* うしろをずらす */
+	for (j = timerctrl.using; j > i; j--) {
+		timerctrl.timers[j] = timerctrl.timers[j - 1];
+	}
+	timerctrl.using++;
+	/* あいたすきまに入れる */
+	timerctrl.timers[i] = timer;
+	timerctrl.next = timerctrl.timers[0]->timeout;
+	io_store_eflags(e);
 	return;
 }
 
 void inthandler20(int *esp)
 {
-    int i;
-    
+    int i, j;
+
     io_out8(PIC0_OCW2, 0x60);	/* IRQ-00受付完了をPICに通知 */
 
     timerctrl.count++;
-	for (i = 0; i < MAX_TIMER; i++) {
-		if (timerctrl.timer[i].flags == TIMER_FLAGS_USING) {
-			timerctrl.timer[i].timeout--;
-			if (timerctrl.timer[i].timeout == 0) {
-				timerctrl.timer[i].flags = TIMER_FLAGS_ALLOC;
-				fifo8_put(timerctrl.timer[i].fifo, timerctrl.timer[i].data);
-			}
+	if (timerctrl.next > timerctrl.count) {
+		return;
+	}
+	for (i = 0; i < timerctrl.using; i++) {
+		/* timersのタイマは全て動作中のものなので、flagsを確認しない */
+		if (timerctrl.timers[i]->timeout > timerctrl.count) {
+			break;
 		}
+		/* タイムアウト */
+		timerctrl.timers[i]->flags = TIMER_FLAGS_ALLOC;
+		fifo8_put(timerctrl.timers[i]->fifo, timerctrl.timers[i]->data);
+	}
+	/* ちょうどi個のタイマがタイムアウトした。残りをずらす。 */
+	timerctrl.using -= i;
+	for (j = 0; j < timerctrl.using; j++) {
+		timerctrl.timers[j] = timerctrl.timers[i + j];
+	}
+	if (timerctrl.using > 0) {
+		timerctrl.next = timerctrl.timers[0]->timeout;
+	} else {
+		timerctrl.next = 0xffffffff;
 	}
 }
