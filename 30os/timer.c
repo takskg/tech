@@ -42,7 +42,7 @@ void timer_free(struct TIMER *timer)
 	return;
 }
 
-void timer_init(struct TIMER *timer, struct FIFO8 *fifo, unsigned char data)
+void timer_init(struct TIMER *timer, struct FIFO32 *fifo, int data)
 {
 	timer->fifo = fifo;
 	timer->data = data;
@@ -92,7 +92,7 @@ void inthandler20(int *esp)
 		}
 		/* タイムアウト */
 		timerctrl.timers[i]->flags = TIMER_FLAGS_ALLOC;
-		fifo8_put(timerctrl.timers[i]->fifo, timerctrl.timers[i]->data);
+		fifo32_put(timerctrl.timers[i]->fifo, timerctrl.timers[i]->data);
 	}
 	/* ちょうどi個のタイマがタイムアウトした。残りをずらす。 */
 	timerctrl.using -= i;

@@ -4,7 +4,8 @@
 #define KEYCMD_SENDTO_MOUSE		0xd4
 #define MOUSECMD_ENABLE			0xf4
 
-struct FIFO8 mousefifo;
+struct FIFO32* mousefifo;
+int mousedata0;
 
 void inthandler2c(int *esp)
 /* PS/2マウスからの割り込み */
@@ -13,12 +14,15 @@ void inthandler2c(int *esp)
 	io_out8(PIC1_OCW2, 0x64);	/* IRQ-12受付完了をPIC1に通知 */
 	io_out8(PIC0_OCW2, 0x62);	/* IRQ-02受付完了をPIC0に通知 */
 	data = io_in8(PORT_KEYDAT);
-	fifo8_put(&mousefifo, data);
+	fifo32_put(mousefifo, data + mousedata0);
 	return;
 }
 
-void enable_mouse(struct MOUSE_DEC* mdec)
+void enable_mouse(struct FIFO32 *fifo, int data0, struct MOUSE_DEC *mdec)
 {
+	mousefifo = fifo;
+	mousedata0 = data0;
+
 	/* マウス有効 */
 	wait_KBC_sendready();
 	io_out8(PORT_KEYCMD, KEYCMD_SENDTO_MOUSE);
@@ -28,7 +32,7 @@ void enable_mouse(struct MOUSE_DEC* mdec)
 	return; /* うまくいくとACK(0xfa)が送信されてくる */
 }
 
-int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat)
+int mouse_decode(struct MOUSE_DEC *mdec, int dat)
 {
 	if (mdec->phase == 0) {
 		/* マウスの0xfaを待っている段階 */
